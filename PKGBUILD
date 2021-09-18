@@ -23,9 +23,32 @@ build() {
         -B"${srcdir}/${pkgname}-${pkgver}"/build \
         -H"${srcdir}/${pkgname}-${pkgver}"
   cmake --build "${srcdir}/${pkgname}-${pkgver}"/build
+
+  export JAVA_HOME=/usr/lib/jvm/default
+  # Unset host flags
+  export CXXFLAGS=
+  export CFLAGS=
+
+  for arch in arm64-v8a armeabi-v7a; do
+      cmake -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DBUILD_VERSION_STABLE=ON \
+            -DBUILD_VERSION_DIST_CONTACT="https://aur.archlinux.org/packages/renderdoc" \
+            -DBUILD_VERSION_DIST_NAME="Arch" \
+            -DBUILD_VERSION_DIST_VER="${pkgver}" \
+            -DBUILD_ANDROID=1 \
+            -DANDROID_ABI=$arch \
+            -B"${srcdir}/${pkgname}-${pkgver}/build-android-${arch}" \
+            -H"${srcdir}/${pkgname}-${pkgver}"
+      cmake --build "${srcdir}/${pkgname}-${pkgver}/build-android-${arch}"
+    done
 }
 
 package() {
+  mkdir -p "${pkgdir}/usr/share/renderdoc/plugins/android"
+  cp "${srcdir}/${pkgname}-${pkgver}"/build-android-arm64-v8a/renderdoccmd/RenderDocCmd.apk "${pkgdir}/usr/share/renderdoc/plugins/android/org.renderdoc.renderdoccmd.arm64.apk"
+  cp "${srcdir}/${pkgname}-${pkgver}"/build-android-armeabi-v7a/renderdoccmd/RenderDocCmd.apk "${pkgdir}/usr/share/renderdoc/plugins/android/org.renderdoc.renderdoccmd.arm32.apk"
+
   make DESTDIR="${pkgdir}" -C "${srcdir}/${pkgname}-${pkgver}"/build install
   mkdir -p "${pkgdir}/usr/share/licenses/$pkgname"
   install -Dm644 "${srcdir}/${pkgname}-${pkgver}/LICENSE.md" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
