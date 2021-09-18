@@ -2,7 +2,7 @@
 # Contributor: Hubert Jarosz <marqin.pl+aur at gmail dot com> PGP: 0xFFECF63C1AAB83FF
 
 pkgname=renderdoc-git
-pkgver=1.15
+pkgver=1.15+98.g6535e3b20c
 pkgrel=1
 pkgdesc="OpenGL and Vulkan debugging tool"
 arch=(i686 x86_64)
@@ -32,10 +32,32 @@ build() {
         -D ENABLE_WAYLAND=true \
         -S renderdoc -B build \
         -G Ninja
-  ninja -C build
+  cmake --build build
+
+  export JAVA_HOME=/usr/lib/jvm/default
+  # Unset host flags
+  export CXXFLAGS=
+  export CFLAGS=
+
+  for arch in arm64-v8a armeabi-v7a; do
+      cmake -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DBUILD_VERSION_DIST_CONTACT="https://aur.archlinux.org/packages/renderdoc-git" \
+            -DBUILD_VERSION_DIST_NAME="Arch" \
+            -DBUILD_VERSION_DIST_VER="${pkgver}" \
+            -DBUILD_ANDROID=1 \
+            -DANDROID_ABI=$arch \
+            -S renderdoc -B build-android-$arch \
+            -G Ninja
+      cmake --build build-android-$arch
+    done
 }
 
 package() {
+  mkdir -p "${pkgdir}/usr/share/renderdoc/plugins/android"
+  cp "${srcdir}"/build-android-arm64-v8a/renderdoccmd/RenderDocCmd.apk "${pkgdir}/usr/share/renderdoc/plugins/android/org.renderdoc.renderdoccmd.arm64.apk"
+  cp "${srcdir}"/build-android-armeabi-v7a/renderdoccmd/RenderDocCmd.apk "${pkgdir}/usr/share/renderdoc/plugins/android/org.renderdoc.renderdoccmd.arm32.apk"
+
   DESTDIR="$pkgdir" ninja -C build install
 
   install -Dm644 "${srcdir}"/renderdoc.desktop "$pkgdir/usr/share/applications/renderdoc.desktop"
