@@ -2,7 +2,7 @@
 # Contributor: Hubert Jarosz <marqin.pl+aur at gmail dot com> PGP: 0xFFECF63C1AAB83FF
 
 pkgname=renderdoc-git
-pkgver=1.27
+pkgver=1.39+95.gc4ab650a63
 pkgrel=1
 pkgdesc="OpenGL and Vulkan debugging tool"
 arch=(i686 x86_64)
@@ -14,6 +14,7 @@ source=("git+https://github.com/baldurk/renderdoc")
 sha256sums=('SKIP')
 conflicts=('renderdoc')
 provides=("renderdoc=${pkgver%+*}")
+options=(!lto) # https://aur.archlinux.org/packages/renderdoc-git#comment-957248 logfile breaking
 
 pkgver() {
   cd "${srcdir}"/renderdoc
@@ -31,7 +32,7 @@ build() {
         -DENABLE_UNSUPPORTED_EXPERIMENTAL_POSSIBLY_BROKEN_WAYLAND=ON \
         -S renderdoc -B build \
         -G Ninja
-  ninja -C build
+  cmake --build build
 }
 
 package() {
