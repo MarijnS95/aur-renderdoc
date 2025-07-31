@@ -24,6 +24,7 @@ pkgver() {
 build() {
   cmake -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX=/usr \
+        -DVULKAN_LAYER_FOLDER=/usr/share/vulkan/implicit_layer.d/ \
         -DBUILD_VERSION_DIST_CONTACT="https://aur.archlinux.org/packages/renderdoc-git" \
         -DBUILD_VERSION_DIST_NAME="Arch" \
         -DBUILD_VERSION_DIST_VER="${pkgver}" \
